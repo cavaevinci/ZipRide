@@ -13,6 +13,10 @@ class BTConnectionManager: NSObject, CBCentralManagerDelegate, CBPeripheralDeleg
     var centralManager: CBCentralManager!
     var scooterPeripheral: CBPeripheral?
     var onScooterInfoUpdated: ((ScooterInfo) -> Void)?
+    
+    var scooterInfo = ScooterInfo(manufacturer: "", model: "", serialNumber: "",
+                                      hardwareRevision: "", firmwareRevision: "",
+                                      softwareRevision: "", batteryLevel: 0)
 
     override init() {
         super.init()
@@ -58,9 +62,6 @@ class BTConnectionManager: NSObject, CBCentralManagerDelegate, CBPeripheralDeleg
         print("Failed to connect to Kugoo Kukirin G4: \(error?.localizedDescription ?? "Unknown error")")
     }
 
-    // ... (Other delegate methods for handling service discovery, characteristic reads/writes)
-    // ... (Inside your ScooterConnectionManager class)
-
     func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
         if let error = error {
             print("Error discovering services: \(error.localizedDescription)")
@@ -72,13 +73,13 @@ class BTConnectionManager: NSObject, CBCentralManagerDelegate, CBPeripheralDeleg
         for service in services {
             print("Found the relevant service!---", service)
             if service.uuid == CBUUID(string: "FFF0") ||
-                   service.uuid == CBUUID(string: "180F") ||
-                   service.uuid == CBUUID(string: "180A") ||
-                   service.uuid == CBUUID(string: "F000FFC0-0451-4000-B000-000000000000") {
+               service.uuid == CBUUID(string: "180F") ||
+               service.uuid == CBUUID(string: "180A") ||
+               service.uuid == CBUUID(string: "F000FFC0-0451-4000-B000-000000000000") {
 
-                    print("Found the relevant service!---", service)
-                    peripheral.discoverCharacteristics(nil, for: service)
-                    //break
+                print("Found the relevant service!---", service)
+                peripheral.discoverCharacteristics(nil, for: service)
+                //break
             }
         }
     }
@@ -112,52 +113,37 @@ class BTConnectionManager: NSObject, CBCentralManagerDelegate, CBPeripheralDeleg
                 return
             }
 
-            /*if let data = characteristic.value {
-                if characteristic.uuid == CBUUID(string: "2A19") {
-                    // Battery Level (already handled)
-                    let batteryLevel = data.first ?? 0
-                    print("Battery Level: \(batteryLevel)%")
-                } else if characteristic.uuid == CBUUID(string: "FFF1") {
-                    // Example: Speed in km/h (assuming two bytes, little-endian)
-                    let speedData = data.prefix(2) // Get the first two bytes
-                    let speed = Int(speedData[0]) + Int(speedData[1]) << 8
-                    print("Speed: \(speed) km/h")
-                } else {
-                    // Handle other characteristics or print raw data
-                    let hexString = data.map { String(format: "%02x", $0) }.joined()
-                    print("Characteristic UUID: \(characteristic.uuid), Value: 0x\(hexString)")
-                }
-            }*/
-            if let data = characteristic.value {
-                // Create an instance of ScooterInfo to store the data
-                var scooterInfo = ScooterInfo(manufacturer: "", model: "", serialNumber: "",
-                                              hardwareRevision: "", firmwareRevision: "",
-                                              softwareRevision: "", batteryLevel: 0)
-
+        if let data = characteristic.value {
                 switch characteristic.uuid {
                 case CBUUID(string: "2A29"): // Manufacturer Name String
                     scooterInfo.manufacturer = String(data: data, encoding: .utf8) ?? "Unknown"
+                    print("Manufacturer: \(scooterInfo.manufacturer)")
                 case CBUUID(string: "2A24"): // Model Number String
                     scooterInfo.model = String(data: data, encoding: .utf8) ?? "Unknown"
-                // ... (handle other characteristics similarly)
-                case CBUUID(string: "2A19"): // Battery Level
-                    scooterInfo.batteryLevel = Int(data.first ?? 0)
+                    print("Model: \(scooterInfo.model)")
                 case CBUUID(string: "2A25"): // Serial Number String
                     scooterInfo.serialNumber = String(data: data, encoding: .utf8) ?? "Unknown"
+                    print("Serial Number: \(scooterInfo.serialNumber)")
                 case CBUUID(string: "2A27"): // Hardware Revision String
                     scooterInfo.hardwareRevision = String(data: data, encoding: .utf8) ?? "Unknown"
+                    print("Hardware Revision: \(scooterInfo.hardwareRevision)")
                 case CBUUID(string: "2A26"): // Firmware Revision String
                     scooterInfo.firmwareRevision = String(data: data, encoding: .utf8) ?? "Unknown"
+                    print("Firmware Revision: \(scooterInfo.firmwareRevision)")
                 case CBUUID(string: "2A28"): // Software Revision String
                     scooterInfo.softwareRevision = String(data: data, encoding: .utf8) ?? "Unknown"
+                    print("Software Revision: \(scooterInfo.softwareRevision)")
+                case CBUUID(string: "2A19"): // Battery Level
+                    scooterInfo.batteryLevel = Int(data.first ?? 0)
+                    print("Battery Level: \(scooterInfo.batteryLevel)%")
+                // Add more cases for other characteristics as you identify them
                 default:
-                    // Handle other characteristics or print raw data for further analysis
+                    // Print raw data for unidentified characteristics
                     let hexString = data.map { String(format: "%02x", $0) }.joined()
                     print("Characteristic UUID: \(characteristic.uuid), Value: 0x\(hexString)")
                 }
 
-                // Now you have a scooterInfo instance with the updated data
-                // You can use this instance to update your UI or perform other actions
+                // Notify the ViewController about the updated scooterInfo
                 onScooterInfoUpdated?(scooterInfo)
             } else {
                 // Handle nil values
