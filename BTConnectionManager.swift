@@ -16,7 +16,7 @@ class BTConnectionManager: NSObject, CBCentralManagerDelegate, CBPeripheralDeleg
     
     var scooterInfo = ScooterInfo(manufacturer: "", model: "", serialNumber: "",
                                       hardwareRevision: "", firmwareRevision: "",
-                                      softwareRevision: "", batteryLevel: 0)
+                                  softwareRevision: "", batteryLevel: 0, speed: 0)
 
     override init() {
         super.init()
@@ -79,7 +79,7 @@ class BTConnectionManager: NSObject, CBCentralManagerDelegate, CBPeripheralDeleg
 
                 print("Found the relevant service!---", service)
                 peripheral.discoverCharacteristics(nil, for: service)
-                //break
+                break
             }
         }
     }
@@ -96,8 +96,32 @@ class BTConnectionManager: NSObject, CBCentralManagerDelegate, CBPeripheralDeleg
             // Replace "CHARACTERISTIC_UUID_TO_READ" with the actual UUID of the characteristic you want to read
             //if characteristic.uuid == CBUUID(string: "CHARACTERISTIC_UUID_TO_READ") {
                 print("Found the characteristic to read!")
-                peripheral.readValue(for: characteristic)
+                print("    - Characteristic UUID: \(characteristic.uuid), Properties: \(characteristic.properties)")
+                //peripheral.readValue(for: characteristic)
+                if characteristic.uuid == CBUUID(string: "FFF1") {
+                    // Introduce a delay before reading FFF1 (optional)
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) { [weak self] in
+                        self?.scooterPeripheral?.readValue(for: characteristic)
+                    }
+                } else {
+                    peripheral.readValue(for: characteristic)
+                }
             //}
+        }
+    }
+    
+    func peripheral(_ peripheral: CBPeripheral, didUpdateNotificationStateFor characteristic: CBCharacteristic, error:
+     Error?) {
+        if let error = error {
+            print("Error changing notification state: \(error.localizedDescription)")
+            return
+        }
+
+        if characteristic.isNotifying {
+            print("Subscribed to notifications for characteristic: \(characteristic.uuid)")
+            peripheral.readValue(for: characteristic)
+        } else {
+            print("Unsubscribed from notifications for characteristic: \(characteristic.uuid)")
         }
     }
 
@@ -115,6 +139,20 @@ class BTConnectionManager: NSObject, CBCentralManagerDelegate, CBPeripheralDeleg
 
         if let data = characteristic.value {
                 switch characteristic.uuid {
+                case CBUUID(string: "FFF1"):
+                    let hexString = data.map { String(format: "%02x", $0) }.joined()
+                    print("Characteristic FFF1 Value: 0x\(hexString)")
+
+                    // Attempt to decode and interpret the FFF1 value
+                    // You'll need to experiment with different data types and encodings based on your scooter's protocol
+                    // Example: Assuming it's a 16-bit unsigned integer representing speed in km/h (little-endian)
+                    if data.count >= 2 {
+                        let speed = Int(data[0]) + (Int(data[1]) << 8)
+                        scooterInfo.speed = speed // Assuming you add a 'speed' property to ScooterInfo
+                        print("Speed: \(speed) km/h")
+                    } else {
+                        print("FFF1 data is not in the expected format.")
+                    }
                 case CBUUID(string: "2A29"): // Manufacturer Name String
                     scooterInfo.manufacturer = String(data: data, encoding: .utf8) ?? "Unknown"
                     print("Manufacturer: \(scooterInfo.manufacturer)")
@@ -134,8 +172,38 @@ class BTConnectionManager: NSObject, CBCentralManagerDelegate, CBPeripheralDeleg
                     scooterInfo.softwareRevision = String(data: data, encoding: .utf8) ?? "Unknown"
                     print("Software Revision: \(scooterInfo.softwareRevision)")
                 case CBUUID(string: "2A19"): // Battery Level
+                    if characteristic.isNotifying {
+                        // If we're getting notifications, update the battery level
+                        scooterInfo.batteryLevel = Int(data.first ?? 0)
+                        print("Battery Level (Notification): \(scooterInfo.batteryLevel)%")
+                    } else if characteristic.properties.contains(.read) {
+                        // If not notifying, attempt a read (might not be necessary if notifications are working)
+                        print("Battery Level characteristic is readable. Attempting to read...")
+                        peripheral.readValue(for: characteristic)
+                    } else {
+                        print("Battery Level characteristic is not readable.")
+                    }
+                /*case CBUUID(string: "2A19"): // Battery Level
+                    if characteristic.properties.contains(.read) {
+                        print("Battery Level characteristic is readable. Attempting to read...")
+                        peripheral.readValue(for: characteristic)
+                    }
+                    
+                    if characteristic.properties.contains(.notify) {
+                        print("Battery Level characteristic supports notifications. Subscribing...")
+                        peripheral.setNotifyValue(true, for: characteristic)
+                        
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 2) { [weak self] in
+                            self?.scooterPeripheral?.readValue(for: characteristic)
+                        }
+                    }
+                    
+                    else {
+                        print("Battery Level characteristic is not readable.")
+                    }
                     scooterInfo.batteryLevel = Int(data.first ?? 0)
-                    print("Battery Level: \(scooterInfo.batteryLevel)%")
+                    print("Battery Level: \(scooterInfo.batteryLevel)%")*/
+                    
                 // Add more cases for other characteristics as you identify them
                 default:
                     // Print raw data for unidentified characteristics
@@ -160,4 +228,5 @@ struct ScooterInfo {
     var firmwareRevision: String
     var softwareRevision: String
     var batteryLevel: Int
+    var speed: Int
 }
