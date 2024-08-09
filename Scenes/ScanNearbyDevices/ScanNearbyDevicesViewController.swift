@@ -6,6 +6,7 @@ class ScanNearbyDevicesViewController: UIViewController, UITableViewDataSource, 
     let scooterConnectionManager = BTScooterService()
 
     let tableView = UITableView()
+    var header: NavigationBarProtocol!
 
     var discoveredPeripherals: [CBPeripheral] = []
 
@@ -13,6 +14,7 @@ class ScanNearbyDevicesViewController: UIViewController, UITableViewDataSource, 
         super.viewDidLoad()
 
         setupUI()
+        setupHeader()
         setupConstraints()
 
         scooterConnectionManager.onPeripheralsDiscovered = { [weak self] newPeripherals in
@@ -33,9 +35,21 @@ class ScanNearbyDevicesViewController: UIViewController, UITableViewDataSource, 
         view.addSubview(tableView)
     }
     
+    func setupHeader() {
+        header = Navbar()
+        header.setBarStyle(.godMode)
+        view.addSubview(header)
+    }
+    
     func setupConstraints() {
-        tableView.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
+        header?.snp.makeConstraints { make in
+            make.leading.trailing.equalTo(view.safeAreaLayoutGuide)
+            make.top.equalToSuperview()
+        }
+        
+        tableView.snp.makeConstraints { (make) in
+            make.leading.trailing.bottom.equalToSuperview()
+            make.top.equalTo(header.snp.bottom)
         }
     }
 
