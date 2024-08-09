@@ -86,6 +86,7 @@ extension Navbar: NavigationBarProtocol {
         case .godMode:
             currentSceneName.text = "ZipRide-GODMODE"
             godModeButton.isHidden = false
+            LogService.shared.log("SET GODMODE")
         case .normal:
             currentSceneName.text = "ZipRide"
             godModeButton.isHidden = true

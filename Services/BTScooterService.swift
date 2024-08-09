@@ -22,7 +22,7 @@ class BTScooterService: NSObject, CBCentralManagerDelegate {
     // MARK: - Bluetooth Scanning
     func startScanning() {
         guard centralManager.state == .poweredOn else {
-            print("Bluetooth is not powered on.")
+            LogService.shared.log("Bluetooth is not powered on.")
             return
         }
 
@@ -30,7 +30,7 @@ class BTScooterService: NSObject, CBCentralManagerDelegate {
     }
 
     private func initiateScanning() {
-        print("Bluetooth is powered on, start scanning...")
+        LogService.shared.log("Bluetooth is powered on, start scanning...")
         centralManager.scanForPeripherals(withServices: nil, options: nil)
     }
 
@@ -42,12 +42,12 @@ class BTScooterService: NSObject, CBCentralManagerDelegate {
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
         switch central.state {
         case .poweredOn:
-            print("Bluetooth is powered on.")
+            LogService.shared.log("Bluetooth is powered on.")
             initiateScanning()
         case .poweredOff:
-            print("Bluetooth is powered off.")
+            LogService.shared.log("Bluetooth is powered off.")
         case .unauthorized:
-            print("Bluetooth is unauthorized. Please enable it in Settings.")
+            LogService.shared.log("Bluetooth is unauthorized. Please enable it in Settings.")
         default:
             break
         }
@@ -55,7 +55,7 @@ class BTScooterService: NSObject, CBCentralManagerDelegate {
 
     func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
         if !discoveredPeripherals.contains(where: { $0.identifier == peripheral.identifier }) && peripheral.name != nil {
-            print("Discovered peripheral: \(peripheral.name ?? "Unknown")")
+            LogService.shared.log("Discovered peripheral: \(peripheral.name ?? "Unknown")")
             discoveredPeripherals.append(peripheral)
             onPeripheralsDiscovered?(discoveredPeripherals)
         }

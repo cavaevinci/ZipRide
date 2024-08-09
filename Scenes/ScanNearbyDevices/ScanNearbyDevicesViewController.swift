@@ -46,6 +46,13 @@ class ScanNearbyDevicesViewController: UIViewController, UITableViewDataSource, 
         header?.didTapGodMode = { [weak self] in
             guard let self else { return }
             print(" DID TAP GOD MODE IN SCAN NEARBY DEVICES")
+            let logVC = LogViewController(logMessages: LogService.shared.logMessages) // Replace with your actual log data
+            print(" ALL MESSAGES ---", LogService.shared.logMessages)
+            // Set the presentation style and transition
+            logVC.modalPresentationStyle = .custom
+            logVC.transitioningDelegate = self
+
+            present(logVC, animated: true, completion: nil)
         }
     }
     
@@ -78,6 +85,13 @@ class ScanNearbyDevicesViewController: UIViewController, UITableViewDataSource, 
         tableView.deselectRow(at: indexPath, animated: true)
         let selectedPeripheral = discoveredPeripherals[indexPath.row]
         print(" Selected peripheral - ", selectedPeripheral)
+    }
+}
+
+extension ScanNearbyDevicesViewController: UIViewControllerTransitioningDelegate {
+    func presentationController(forPresented presented: UIViewController, presenting: UIViewController?, source: UIViewController) -> UIPresentationController? {
+        return
+ BottomHalfPresentationController(presentedViewController: presented, presenting: presenting)
     }
 }
 
