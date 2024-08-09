@@ -6,13 +6,12 @@ class ScanNearbyDevicesViewController: UIViewController, UITableViewDataSource, 
     let scooterConnectionManager = BTScooterService()
 
     let tableView = UITableView()
-    var header: NavigationBarProtocol!
+    var header: Navbar!
 
     var discoveredPeripherals: [CBPeripheral] = []
 
     override func viewDidLoad() {
         super.viewDidLoad()
-
         setupUI()
         setupHeader()
         setupConstraints()
@@ -36,9 +35,18 @@ class ScanNearbyDevicesViewController: UIViewController, UITableViewDataSource, 
     }
     
     func setupHeader() {
+        navigationController?.navigationBar.isHidden = true
         header = Navbar()
         header.setBarStyle(.godMode)
         view.addSubview(header)
+        observeHeader()
+    }
+    
+    func observeHeader() {
+        header?.didTapGodMode = { [weak self] in
+            guard let self else { return }
+            print(" DID TAP GOD MODE IN SCAN NEARBY DEVICES")
+        }
     }
     
     func setupConstraints() {

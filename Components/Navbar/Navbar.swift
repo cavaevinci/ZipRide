@@ -14,15 +14,27 @@ enum NavigationBarStyle {
 
 protocol NavigationBarProtocol: UIView {
     func setBarStyle(_ style: NavigationBarStyle)
-    var didTapGodModeButton: (() -> Void)? { get set }
+    var didTapGodMode: (() -> Void)? { get set }
 }
 
 class Navbar: UIView {
     
-    var didTapGodModeButton: (() -> Void)?
+    var didTapGodMode: (() -> Void)?
     
-    let currentSceneName = UILabel()
-    let godModeButton = UIButton(type: .contactAdd)
+    lazy var currentSceneName: UILabel = {
+        let label = UILabel()
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.text = "ZipRide"
+        return label
+    }()
+    
+    lazy var godModeButton: UIButton = {
+        let button = UIButton(type: .contactAdd)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.addTarget(self, action: #selector(didTapGodModeButton), for: .touchUpInside)
+        button.isUserInteractionEnabled = true
+        return button
+    }()
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -43,6 +55,11 @@ class Navbar: UIView {
         setupConstraints()
     }
     
+    @objc func didTapGodModeButton() {
+        print(" navbar did tap god mode")
+        didTapGodMode?()
+    }
+    
     func setupConstraints() {
         snp.makeConstraints { make in
             make.height.equalTo(100)
@@ -56,15 +73,18 @@ class Navbar: UIView {
         godModeButton.snp.makeConstraints { make in
             make.trailing.equalToSuperview().offset(-25)
             make.centerY.equalTo(currentSceneName.snp.centerY)
+            make.width.equalTo(44)
+            make.height.equalTo(44)
         }
     }
 }
 
 extension Navbar: NavigationBarProtocol {
+    
     func setBarStyle(_ style: NavigationBarStyle) {
         switch style {
         case .godMode:
-            currentSceneName.text = "ZipRide - GOD MODE"
+            currentSceneName.text = "ZipRide-GODMODE"
             godModeButton.isHidden = false
         case .normal:
             currentSceneName.text = "ZipRide"
@@ -72,3 +92,4 @@ extension Navbar: NavigationBarProtocol {
         }
     }
 }
+

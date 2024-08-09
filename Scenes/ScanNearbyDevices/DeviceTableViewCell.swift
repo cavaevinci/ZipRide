@@ -16,8 +16,6 @@ class DeviceTableViewCell: UITableViewCell {
         contentView.addSubview(nameLabel)
 
         nameLabel.snp.makeConstraints { make in
-            make.height.equalTo(80)
-            
             make.top.equalToSuperview().offset(10)
             make.leading.equalToSuperview().offset(10)
             make.trailing.equalToSuperview().offset(-10)
