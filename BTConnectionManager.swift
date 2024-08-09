@@ -17,6 +17,11 @@ class BTConnectionManager: NSObject, CBCentralManagerDelegate, CBPeripheralDeleg
     var scooterInfo = ScooterInfo(manufacturer: "", model: "", serialNumber: "",
                                       hardwareRevision: "", firmwareRevision: "",
                                   softwareRevision: "", batteryLevel: 0, speed: 0)
+    
+    var onPeripheralsDiscovered: (([CBPeripheral]) -> Void)?
+    var discoveredPeripherals: [CBPeripheral] = []
+
+    var scanTimer: Timer?
 
     override init() {
         super.init()
@@ -27,12 +32,24 @@ class BTConnectionManager: NSObject, CBCentralManagerDelegate, CBPeripheralDeleg
         // Check if Bluetooth is powered on before scanning
         if centralManager.state == .poweredOn {
             print("Bluetooth is powered on, start scanning...")
-            centralManager.scanForPeripherals(withServices: nil, options: nil)
+            scanTimer = Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { [weak self] _ in
+                        self?.centralManager.scanForPeripherals(withServices: nil, options: nil)
+                    }
         } else {
             print("Bluetooth is not powered on.")
             // You might want to handle this case by prompting the user to enable Bluetooth
         }
+        
     }
+    
+    func stopScanning() {
+            // Stop the scan timer
+            scanTimer?.invalidate()
+            scanTimer = nil
+
+            // Stop the actual Bluetooth scan
+            centralManager.stopScan()
+        }
 
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
         if central.state == .poweredOn {
@@ -42,14 +59,30 @@ class BTConnectionManager: NSObject, CBCentralManagerDelegate, CBPeripheralDeleg
             print("Bluetooth is not powered on.")
         }
     }
+    
+    func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error:
+     Error?) {
+        if let error = error {
+                print("Disconnected fromperipheral: \(peripheral.name ?? "Unknown"), error: \(error.localizedDescription)")
+            } else {
+                print("Disconnected from peripheral: \(peripheral.name ?? "Unknown")")
+            }
+
+            // Remove the disconnected peripheral
+            discoveredPeripherals.removeAll(where: { $0.identifier == peripheral.identifier })
+
+            // Notify the ViewController to update the UI
+            onPeripheralsDiscovered?(discoveredPeripherals)
+        }
 
     func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
         print(" SVI UREJDAJI ---", peripheral.name)
-        if peripheral.name == "G4" {
+        /*if peripheral.name == "G4" {
             print("Found Kugoo Kukirin G4, attempting to connect...")
             scooterPeripheral = peripheral
             centralManager.connect(scooterPeripheral!, options: nil)
-        }
+        }*/
+        onPeripheralsDiscovered?([peripheral])
     }
 
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
@@ -60,6 +93,15 @@ class BTConnectionManager: NSObject, CBCentralManagerDelegate, CBPeripheralDeleg
 
     func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
         print("Failed to connect to Kugoo Kukirin G4: \(error?.localizedDescription ?? "Unknown error")")
+    }
+    
+    func connect(to peripheral: CBPeripheral) {
+        // Stop scanning for new peripherals (optional, but good practice)
+        centralManager.stopScan()
+
+        // Store the peripheral and attempt to connect
+        scooterPeripheral = peripheral
+        centralManager.connect(scooterPeripheral!, options: nil)
     }
 
     func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
@@ -138,6 +180,7 @@ class BTConnectionManager: NSObject, CBCentralManagerDelegate, CBPeripheralDeleg
             }
 
         if let data = characteristic.value {
+            print(" DATA CHARACTERISINC VALUE ----")
                 switch characteristic.uuid {
                 case CBUUID(string: "FFF1"):
                     let hexString = data.map { String(format: "%02x", $0) }.joined()
@@ -183,26 +226,6 @@ class BTConnectionManager: NSObject, CBCentralManagerDelegate, CBPeripheralDeleg
                     } else {
                         print("Battery Level characteristic is not readable.")
                     }
-                /*case CBUUID(string: "2A19"): // Battery Level
-                    if characteristic.properties.contains(.read) {
-                        print("Battery Level characteristic is readable. Attempting to read...")
-                        peripheral.readValue(for: characteristic)
-                    }
-                    
-                    if characteristic.properties.contains(.notify) {
-                        print("Battery Level characteristic supports notifications. Subscribing...")
-                        peripheral.setNotifyValue(true, for: characteristic)
-                        
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 2) { [weak self] in
-                            self?.scooterPeripheral?.readValue(for: characteristic)
-                        }
-                    }
-                    
-                    else {
-                        print("Battery Level characteristic is not readable.")
-                    }
-                    scooterInfo.batteryLevel = Int(data.first ?? 0)
-                    print("Battery Level: \(scooterInfo.batteryLevel)%")*/
                     
                 // Add more cases for other characteristics as you identify them
                 default:
