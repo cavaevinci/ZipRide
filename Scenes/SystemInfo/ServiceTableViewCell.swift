@@ -40,6 +40,7 @@ class ServiceTableViewCell: UITableViewCell {
             make.top.equalToSuperview().offset(8)
             make.leading.equalToSuperview().offset(16)
             make.trailing.lessThanOrEqualTo(isPrimaryLabel.snp.leading).offset(-8)
+            make.bottom.equalToSuperview().offset(-8)
         }
 
         isPrimaryLabel.snp.makeConstraints { make in

@@ -30,6 +30,8 @@ class SystemInfoViewController: UIViewController, UITableViewDataSource, UITable
         // Set up table view
         tableView.dataSource = self
         tableView.delegate = self
+        tableView.estimatedRowHeight = 44
+        tableView.rowHeight = UITableView.automaticDimension
         tableView.register(ServiceTableViewCell.self, forCellReuseIdentifier: "ServiceCell")
         view.addSubview(tableView)
 

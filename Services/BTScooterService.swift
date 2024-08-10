@@ -82,7 +82,7 @@ class BTScooterService: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
         LogService.shared.log("  Identifier:", peripheral.identifier.uuidString)
         LogService.shared.log("  State:", peripheral.state.rawValue) // 0 = disconnected, 1 = connecting, 2 = connected
         LogService.shared.log("  Services:", peripheral.services ?? "No services discovered yet")
-
+        stopScanning()
         // You can now start discovering services on the connected peripheral if needed
         peripheral.discoverServices(nil) // Discover all services
     }
