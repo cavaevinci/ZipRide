@@ -24,7 +24,6 @@ class SystemInfoViewController: UIViewController, UITableViewDataSource, UITable
     init(services: [CBService], connectedPeripheral: CBPeripheral) {
         self.services = services
         self.connectedPeripheral = connectedPeripheral // Store the connected peripheral
-        print(" self.connectedPeripheral--- ", self.connectedPeripheral)
         super.init(nibName: nil, bundle: nil)
         for service in services {
             serviceCharacteristics[service] = [] // Initially, no characteristics are discovered
