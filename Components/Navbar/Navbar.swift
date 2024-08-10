@@ -32,7 +32,8 @@ class Navbar: UIView {
         let button = UIButton(type: .contactAdd)
         button.translatesAutoresizingMaskIntoConstraints = false
         button.addTarget(self, action: #selector(didTapGodModeButton), for: .touchUpInside)
-        button.isUserInteractionEnabled = true
+        button.setImage(UIImage(systemName: "list.bullet.clipboard"), for: .normal)
+        button.tintColor = .white
         return button
     }()
 
@@ -89,6 +90,7 @@ extension Navbar: NavigationBarProtocol {
         case .normal:
             currentSceneName.text = "ZipRide"
             godModeButton.isHidden = true
+            LogService.shared.log("SET NORMALMODE")
         }
     }
 }
