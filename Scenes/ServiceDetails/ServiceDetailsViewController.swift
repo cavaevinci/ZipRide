@@ -8,7 +8,7 @@
 import UIKit
 import CoreBluetooth
 
-class ServiceDetailsViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
+class ServiceDetailsViewController: UIViewController, UITableViewDataSource, UITableViewDelegate, CBPeripheralDelegate {
     
     let scooterConnectionManager = BTScooterService()
 
@@ -16,11 +16,12 @@ class ServiceDetailsViewController: UIViewController, UITableViewDataSource, UIT
     var header: Navbar!
 
     var service: CBService!
+    var connectedPeripheral: CBPeripheral?
     var characteristics: [CBCharacteristic] = []
 
-    init(service: CBService, characteristics: [CBCharacteristic]) {
+    init(service: CBService, connectedPeripheral: CBPeripheral) {
         self.service = service
-        self.characteristics = characteristics
+        self.connectedPeripheral = connectedPeripheral
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -31,8 +32,8 @@ class ServiceDetailsViewController: UIViewController, UITableViewDataSource, UIT
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        print("ServiceDetailViewController--_service ", service)
-        //print("ServiceDetailViewController--characteristics ", characteristics)
+        connectedPeripheral?.delegate = self // Set the delegate
+        print("ServiceDetailViewController--_service ", service as Any)
         
         // Set up table view
         tableView.dataSource = self
@@ -45,7 +46,7 @@ class ServiceDetailsViewController: UIViewController, UITableViewDataSource, UIT
         setupHeader()
         setupConstraints()
         
-        //connectedPeripheral?.discoverCharacteristics(nil, for: service)
+        connectedPeripheral?.discoverCharacteristics(nil, for: service)
     }
     
     func setupConstraints() {
@@ -85,7 +86,7 @@ class ServiceDetailsViewController: UIViewController, UITableViewDataSource, UIT
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return characteristics.count
     }
-
+    
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "ServiceDetailCell", for: indexPath) as! ServiceDetailTableViewCell
         cell.configure(with: characteristics[indexPath.row])
@@ -95,7 +96,35 @@ class ServiceDetailsViewController: UIViewController, UITableViewDataSource, UIT
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
     }
+    
+    // MARK: - CBPeripheralDelegate
 
+    func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
+        if let error = error {
+            LogService.shared.log("Error discovering characteristics: ", error.localizedDescription)
+            return
+        }
+
+        // Update the characteristics array and reload the table view
+        characteristics = service.characteristics ?? []
+        tableView.reloadData()
+
+        // Read values for characteristics with the "read" property
+        for characteristic in characteristics where characteristic.properties.contains(.read) {
+            connectedPeripheral?.readValue(for: characteristic)
+        }
+    }
+
+    func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
+        if let error = error {
+            LogService.shared.log("Error reading characteristic value: ", error.localizedDescription)
+            return
+        }
+
+        if let index = characteristics.firstIndex(of: characteristic) {
+            tableView.reloadRows(at: [IndexPath(row: index, section: 0)], with: .automatic)
+        }
+    }
 }
 
 extension ServiceDetailsViewController: UIViewControllerTransitioningDelegate {
