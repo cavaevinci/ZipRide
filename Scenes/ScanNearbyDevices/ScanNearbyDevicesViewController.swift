@@ -83,7 +83,20 @@ class ScanNearbyDevicesViewController: UIViewController, UITableViewDataSource, 
         tableView.deselectRow(at: indexPath, animated: true)
         let selectedPeripheral = discoveredPeripherals[indexPath.row]
         LogService.shared.log("Selected peripheral:", selectedPeripheral)
-        scooterConnectionManager.connectToPeripheral(selectedPeripheral)
+        
+        // Connect to the peripheral and handle the discovered services
+       scooterConnectionManager.connectToPeripheral(selectedPeripheral) { [weak self] services in
+           guard let self = self else { return }
+
+           DispatchQueue.main.async {
+               if let services = services {
+                   let systemInfoVC = SystemInfoViewController(services: services)
+                   self.navigationController?.pushViewController(systemInfoVC, animated: true)
+               } else {
+                   // Handle the case where service discovery failed (e.g., show an error message)
+               }
+           }
+       }
     }
 
 }

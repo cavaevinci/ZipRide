@@ -11,12 +11,13 @@ import CoreBluetooth
 class BTScooterService: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
 
     private var centralManager: CBCentralManager!
-    var onPeripheralsDiscovered: (([CBPeripheral]) -> Void)?
     var discoveredPeripherals: [CBPeripheral] = []
     private var connectedPeripheral: CBPeripheral?
     // Add a dictionary to store the last discovery time for each peripheral
     private var lastDiscoveredTime: [UUID: Date] = [:]
-
+    
+    var onPeripheralsDiscovered: (([CBPeripheral]) -> Void)?
+    var onServicesDiscovered: (([CBService]?) -> Void)?
     override init() {
         super.init()
         centralManager = CBCentralManager(delegate: self, queue: nil)
@@ -42,7 +43,7 @@ class BTScooterService: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
         LogService.shared.log("Bluetooth - stop scanning")
     }
     
-    func connectToPeripheral(_ peripheral: CBPeripheral) {
+    func connectToPeripheral(_ peripheral: CBPeripheral, completion: @escaping ([CBService]?) -> Void) {
         // Stop scanning before connecting
         stopScanning()
 
@@ -56,6 +57,7 @@ class BTScooterService: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
         connectedPeripheral = peripheral
 
         LogService.shared.log("Connecting to peripheral: ", peripheral)
+        onServicesDiscovered = completion
     }
 
     // MARK: - CBCentralManagerDelegate Methods
@@ -75,10 +77,14 @@ class BTScooterService: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
     
     // Handle successful connection
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
-        LogService.shared.log("Connected to peripheral: ", peripheral)
+        LogService.shared.log("Connected to peripheral:")
+        LogService.shared.log("  Name:", peripheral.name ?? "Unknown")
+        LogService.shared.log("  Identifier:", peripheral.identifier.uuidString)
+        LogService.shared.log("  State:", peripheral.state.rawValue) // 0 = disconnected, 1 = connecting, 2 = connected
+        LogService.shared.log("  Services:", peripheral.services ?? "No services discovered yet")
 
         // You can now start discovering services on the connected peripheral if needed
-        //peripheral.discoverServices(nil)
+        peripheral.discoverServices(nil) // Discover all services
     }
 
     // Handle connection failure
@@ -124,6 +130,75 @@ class BTScooterService: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
 
         // Notify the view controller to update the UI
         onPeripheralsDiscovered?(discoveredPeripherals)
+    }
+    
+    func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
+        if let error = error {
+            LogService.shared.log("Error discovering services: ", error.localizedDescription)
+            // Handle the error appropriately (e.g., show an error message to the user)
+            return
+        }
+
+        guard let services = peripheral.services else {
+            LogService.shared.log("No services discovered for peripheral: ", peripheral)
+            return
+        }
+        
+        // Call the completion handler with the discovered services
+        onServicesDiscovered?(services)
+
+        // Reset the completion handler
+        onServicesDiscovered = nil
+
+        for service in services {
+            LogService.shared.log("Discovered service: ", service)
+
+            // Discover characteristics for each service
+            peripheral.discoverCharacteristics(nil, for: service)
+        }
+    }
+
+    func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor
+     service: CBService, error: Error?) {
+        if let error = error {
+            LogService.shared.log("Error discovering characteristics: ", error.localizedDescription)
+            return
+        }
+
+        guard let characteristics = service.characteristics else {
+            LogService.shared.log("No characteristics discovered for service: ", service)
+            return
+        }
+        
+        guard let services = peripheral.services else {
+            // ... (handle no services case)
+            return
+        }
+        
+        onServicesDiscovered?(services)
+
+        for characteristic in characteristics {
+            if characteristic.uuid == CBUUID(string: "2A19") { // Battery Level characteristic UUID
+                peripheral.readValue(for: characteristic)
+            }
+        }
+    }
+    
+    func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic,
+     error: Error?) {
+        if let error = error {
+            LogService.shared.log("Error reading characteristic value: ", error.localizedDescription)
+            return
+        }
+
+        if characteristic.uuid == CBUUID(string: "2A19") {
+            if let batteryLevelData = characteristic.value,
+               let batteryLevel = batteryLevelData.first {
+                LogService.shared.log("Battery Level: ", batteryLevel, "%")
+            } else {
+                LogService.shared.log("Invalid battery level data")
+            }
+        }
     }
 
 }
