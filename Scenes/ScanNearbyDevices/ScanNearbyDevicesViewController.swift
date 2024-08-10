@@ -6,17 +6,19 @@ class ScanNearbyDevicesViewController: UIViewController, UITableViewDataSource, 
     let scooterConnectionManager = BTScooterService()
 
     let tableView = UITableView()
+    var header: Navbar!
 
     var discoveredPeripherals: [CBPeripheral] = []
 
     override func viewDidLoad() {
         super.viewDidLoad()
-
         setupUI()
+        setupHeader()
         setupConstraints()
 
         scooterConnectionManager.onPeripheralsDiscovered = { [weak self] newPeripherals in
             DispatchQueue.main.async {
+                LogService.shared.log("Discovered new peripheral", newPeripherals.description)
                 self?.discoveredPeripherals = newPeripherals
                 self?.tableView.reloadData()
             }
@@ -33,9 +35,34 @@ class ScanNearbyDevicesViewController: UIViewController, UITableViewDataSource, 
         view.addSubview(tableView)
     }
     
+    func setupHeader() {
+        navigationController?.navigationBar.isHidden = true
+        header = Navbar()
+        header.setBarStyle(.godMode)
+        view.addSubview(header)
+        observeHeader()
+    }
+    
+    func observeHeader() {
+        header?.didTapGodMode = { [weak self] in
+            guard let self else { return }
+            let logVC = LogViewController(logMessages: LogService.shared.logMessages)
+            logVC.modalPresentationStyle = .custom
+            logVC.transitioningDelegate = self
+
+            present(logVC, animated: true, completion: nil)
+        }
+    }
+    
     func setupConstraints() {
-        tableView.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
+        header?.snp.makeConstraints { make in
+            make.leading.trailing.equalTo(view.safeAreaLayoutGuide)
+            make.top.equalToSuperview()
+        }
+        
+        tableView.snp.makeConstraints { (make) in
+            make.leading.trailing.bottom.equalToSuperview()
+            make.top.equalTo(header.snp.bottom)
         }
     }
 
@@ -55,7 +82,16 @@ class ScanNearbyDevicesViewController: UIViewController, UITableViewDataSource, 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         let selectedPeripheral = discoveredPeripherals[indexPath.row]
-        print(" Selected peripheral - ", selectedPeripheral)
+        LogService.shared.log("Selected peripheral:", selectedPeripheral)
+        scooterConnectionManager.connectToPeripheral(selectedPeripheral)
+    }
+
+}
+
+extension ScanNearbyDevicesViewController: UIViewControllerTransitioningDelegate {
+    func presentationController(forPresented presented: UIViewController, presenting: UIViewController?, source: UIViewController) -> UIPresentationController? {
+        return
+ BottomHalfPresentationController(presentedViewController: presented, presenting: presenting)
     }
 }
 

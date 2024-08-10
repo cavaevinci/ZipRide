@@ -1,5 +1,5 @@
 //
-//  DeviceTableViewCell.swift
+//  LogTableViewCell.swift
 //  ZipRide
 //
 //  Created by Ivan Evačić on 09.08.2024..
@@ -7,15 +7,16 @@
 
 import UIKit
 
-class DeviceTableViewCell: UITableViewCell {
-    let nameLabel = UILabel()
+class LogTableViewCell: UITableViewCell {
+    let logLabel = UILabel()
 
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
 
-        contentView.addSubview(nameLabel)
+        contentView.addSubview(logLabel)
+        logLabel.numberOfLines = 0
 
-        nameLabel.snp.makeConstraints { make in
+        logLabel.snp.makeConstraints { make in
             make.top.equalToSuperview().offset(10)
             make.leading.equalToSuperview().offset(10)
             make.trailing.equalToSuperview().offset(-10)
