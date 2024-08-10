@@ -81,8 +81,11 @@ class ScanNearbyDevicesViewController: UIViewController, UITableViewDataSource, 
     // MARK: - UITableViewDelegate
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
-        LogService.shared.log("Selected peripheral:", discoveredPeripherals[indexPath.row])
+        let selectedPeripheral = discoveredPeripherals[indexPath.row]
+        LogService.shared.log("Selected peripheral:", selectedPeripheral)
+        scooterConnectionManager.connectToPeripheral(selectedPeripheral)
     }
+
 }
 
 extension ScanNearbyDevicesViewController: UIViewControllerTransitioningDelegate {
