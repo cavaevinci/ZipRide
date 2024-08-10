@@ -14,6 +14,8 @@ class BTScooterService: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
     var onPeripheralsDiscovered: (([CBPeripheral]) -> Void)?
     var discoveredPeripherals: [CBPeripheral] = []
     private var connectedPeripheral: CBPeripheral?
+    // Add a dictionary to store the last discovery time for each peripheral
+    private var lastDiscoveredTime: [UUID: Date] = [:]
 
     override init() {
         super.init()
@@ -76,7 +78,7 @@ class BTScooterService: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
         LogService.shared.log("Connected to peripheral: ", peripheral)
 
         // You can now start discovering services on the connected peripheral if needed
-        // peripheral.discoverServices(nil)
+        //peripheral.discoverServices(nil)
     }
 
     // Handle connection failure
@@ -98,6 +100,30 @@ class BTScooterService: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
             discoveredPeripherals.append(peripheral)
             onPeripheralsDiscovered?(discoveredPeripherals)
         }
+        // Update the last discovery time for this peripheral
+        lastDiscoveredTime[peripheral.identifier] = Date()
+
+        // Periodically check for missing peripherals (e.g., every 5 seconds)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5) { [weak self] in
+            self?.checkForMissingPeripherals()
+        }
+    }
+    
+    private func checkForMissingPeripherals() {
+        // Define a timeout (e.g., 10 seconds)
+        let timeoutInterval: TimeInterval = 5
+
+        // Filter out peripherals that haven't been discovered recently
+        discoveredPeripherals = discoveredPeripherals.filter { peripheral in
+            if let lastSeen = lastDiscoveredTime[peripheral.identifier] {
+                return Date().timeIntervalSince(lastSeen) <= timeoutInterval
+            } else {
+                return false
+            }
+        }
+
+        // Notify the view controller to update the UI
+        onPeripheralsDiscovered?(discoveredPeripherals)
     }
 
 }
