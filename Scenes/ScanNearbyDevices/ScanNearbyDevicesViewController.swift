@@ -18,8 +18,7 @@ class ScanNearbyDevicesViewController: UIViewController, UITableViewDataSource, 
 
         scooterConnectionManager.onPeripheralsDiscovered = { [weak self] newPeripherals in
             DispatchQueue.main.async {
-                LogService.shared.log("Discovered new peripheral")
-                LogService.shared.log(newPeripherals.description)
+                LogService.shared.log("Discovered new peripheral", newPeripherals.description)
                 self?.discoveredPeripherals = newPeripherals
                 self?.tableView.reloadData()
             }
