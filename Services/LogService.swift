@@ -6,26 +6,22 @@
 //
 
 class LogService {
-    static let shared = LogService() // Singleton instance
+    static let shared = LogService()
 
     public var logMessages: [String] = []
-    private var logViewController: LogViewController? // The popup view controller
+    private var logViewController: LogViewController?
 
     private init() { }
 
     func log(_ message: String) {
         logMessages.append(message)
-        logViewController?.updateTableView() // Notify the view controller to refresh
+        print(message)
+        logViewController?.updateTableView()
     }
 
     func showLogs() {
-        // Create and present the log view controller if it doesn't exist
         if logViewController == nil {
             logViewController = LogViewController(logMessages: logMessages)
-            // Present the logViewController modally or however you prefer
-        } else {
-            // If it already exists, just bring it to the front
-            // (You might need to adjust this based on your presentation style)
         }
     }
 }
