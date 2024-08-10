@@ -11,8 +11,12 @@ import SnapKit
 import CoreBluetooth
 
 class SystemInfoViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
+    
+    let scooterConnectionManager = BTScooterService()
 
     let tableView = UITableView()
+    var header: Navbar!
+
     var services: [CBService] = []
 
     init(services: [CBService]) {
@@ -35,9 +39,39 @@ class SystemInfoViewController: UIViewController, UITableViewDataSource, UITable
         tableView.register(ServiceTableViewCell.self, forCellReuseIdentifier: "ServiceCell")
         view.addSubview(tableView)
 
-        // Set up constraints using SnapKit
-        tableView.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
+        setupHeader()
+        setupConstraints()
+    }
+    
+    func setupConstraints() {
+        header?.snp.makeConstraints { make in
+            make.leading.trailing.equalTo(view.safeAreaLayoutGuide)
+            make.top.equalToSuperview()
+        }
+        
+        tableView.snp.makeConstraints { (make) in
+            make.leading.trailing.bottom.equalToSuperview()
+            make.top.equalTo(header.snp.bottom)
+        }
+    }
+    
+    func setupHeader() {
+        navigationController?.navigationBar.isHidden = true
+        header = Navbar()
+        header.setBarStyle(.godMode)
+        header.setTitle(scooterConnectionManager.connectedPeripheralName ?? "Unknown Device")
+        view.addSubview(header)
+        observeHeader()
+    }
+    
+    func observeHeader() {
+        header?.didTapGodMode = { [weak self] in
+            guard let self else { return }
+            let logVC = LogViewController(logMessages: LogService.shared.logMessages)
+            logVC.modalPresentationStyle = .custom
+            logVC.transitioningDelegate = self
+
+            present(logVC, animated: true, completion: nil)
         }
     }
 
@@ -51,5 +85,12 @@ class SystemInfoViewController: UIViewController, UITableViewDataSource, UITable
         let cell = tableView.dequeueReusableCell(withIdentifier: "ServiceCell", for: indexPath) as! ServiceTableViewCell
         cell.configure(with: services[indexPath.row])
         return cell
+    }
+}
+
+extension SystemInfoViewController: UIViewControllerTransitioningDelegate {
+    func presentationController(forPresented presented: UIViewController, presenting: UIViewController?, source: UIViewController) -> UIPresentationController? {
+        return
+ BottomHalfPresentationController(presentedViewController: presented, presenting: presenting)
     }
 }

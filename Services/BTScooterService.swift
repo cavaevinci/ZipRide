@@ -8,6 +8,7 @@
 import Foundation
 import CoreBluetooth
 
+
 class BTScooterService: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
 
     private var centralManager: CBCentralManager!
@@ -18,6 +19,12 @@ class BTScooterService: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
     
     var onPeripheralsDiscovered: (([CBPeripheral]) -> Void)?
     var onServicesDiscovered: (([CBService]?) -> Void)?
+    
+    var connectedPeripheralName: String? {
+        print(" CONN PER NAME --", connectedPeripheral)
+        return connectedPeripheral?.name
+    }
+    
     override init() {
         super.init()
         centralManager = CBCentralManager(delegate: self, queue: nil)
@@ -83,6 +90,11 @@ class BTScooterService: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
         LogService.shared.log("  State:", peripheral.state.rawValue) // 0 = disconnected, 1 = connecting, 2 = connected
         LogService.shared.log("  Services:", peripheral.services ?? "No services discovered yet")
         stopScanning()
+        
+        LogService.shared.log("ovo je perpheral ", peripheral)
+        connectedPeripheral = peripheral
+        LogService.shared.log("ovo je connected perpheral ", connectedPeripheral)
+        
         // You can now start discovering services on the connected peripheral if needed
         peripheral.discoverServices(nil) // Discover all services
     }
@@ -149,7 +161,7 @@ class BTScooterService: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
 
         // Reset the completion handler
         onServicesDiscovered = nil
-
+        
         for service in services {
             LogService.shared.log("Discovered service: ", service)
 
