@@ -1,7 +1,7 @@
 import UIKit
 import CoreBluetooth
 
-class ScanNearbyDevicesViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
+class ScanNearbyDevicesViewController: UIViewController, UITableViewDataSource, UITableViewDelegate, UINavigationControllerDelegate {
 
     let scooterConnectionManager = BTScooterService()
 
@@ -15,7 +15,7 @@ class ScanNearbyDevicesViewController: UIViewController, UITableViewDataSource, 
         setupUI()
         setupHeader()
         setupConstraints()
-
+        navigationController?.delegate = self
         scooterConnectionManager.onPeripheralsDiscovered = { [weak self] newPeripherals in
             DispatchQueue.main.async {
                 LogService.shared.log("Discovered new peripheral", newPeripherals.description)
@@ -25,6 +25,20 @@ class ScanNearbyDevicesViewController: UIViewController, UITableViewDataSource, 
         }
         scooterConnectionManager.startScanning()
     }
+    
+    @objc(navigationController:willShowViewController:animated:) func navigationController(_ navigationController: UINavigationController, willShow viewController: UIViewController, animated: Bool) {
+            // Hide the custom navbar when navigating away from this view controller
+            if viewController != self {
+                header.isHidden = true
+            }
+        }
+
+    @objc(navigationController:didShowViewController:animated:) func navigationController(_ navigationController: UINavigationController, didShow viewController: UIViewController, animated: Bool) {
+            // Show the custom navbar when returning to this view controller
+            if viewController == self {
+                header.isHidden = false
+            }
+        }
 
     func setupUI() {
         tableView.dataSource = self
@@ -39,6 +53,7 @@ class ScanNearbyDevicesViewController: UIViewController, UITableViewDataSource, 
         navigationController?.navigationBar.isHidden = true
         header = Navbar()
         header.setBarStyle(.godMode)
+        header.setTitle("ZIPRIDE")
         view.addSubview(header)
         observeHeader()
     }

@@ -65,7 +65,7 @@ class ServiceDetailsViewController: UIViewController, UITableViewDataSource, UIT
         navigationController?.navigationBar.isHidden = true
         header = Navbar()
         header.setBarStyle(.godMode)
-        header.setTitle(service.uuid.uuidString)
+        header.setTitle(service.uuid.description)
         view.addSubview(header)
         observeHeader()
     }
