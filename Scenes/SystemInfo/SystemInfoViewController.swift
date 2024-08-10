@@ -24,7 +24,6 @@ class SystemInfoViewController: UIViewController, UITableViewDataSource, UITable
     init(services: [CBService], connectedPeripheral: CBPeripheral) {
         self.services = services
         self.connectedPeripheral = connectedPeripheral // Store the connected peripheral
-        print(" self.connectedPeripheral--- ", self.connectedPeripheral)
         super.init(nibName: nil, bundle: nil)
         for service in services {
             serviceCharacteristics[service] = [] // Initially, no characteristics are discovered
@@ -96,10 +95,12 @@ class SystemInfoViewController: UIViewController, UITableViewDataSource, UITable
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
+        // Get the selected service
+        let selectedService = services[indexPath.row]
 
-        let selectedService = Array(serviceCharacteristics.keys)[indexPath.section]
-        let serviceDetailsVC = ServiceDetailsViewController(service: selectedService, characteristics: serviceCharacteristics[selectedService] ?? [])
-        navigationController?.pushViewController(serviceDetailsVC, animated: true)
+        // Create the detail view controller and pass only the selected service
+        let serviceDetailVC = ServiceDetailsViewController(service: selectedService, connectedPeripheral: connectedPeripheral!)
+        navigationController?.pushViewController(serviceDetailVC, animated: true)
     }
 }
 

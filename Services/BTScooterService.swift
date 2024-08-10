@@ -91,7 +91,6 @@ class BTScooterService: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
         stopScanning()
         
         connectedPeripheral = peripheral
-        LogService.shared.log("connected perpheral ", connectedPeripheral)
         
         // You can now start discovering services on the connected peripheral if needed
         peripheral.discoverServices(nil) // Discover all services
