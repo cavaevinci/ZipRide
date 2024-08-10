@@ -245,16 +245,6 @@ class BTScooterService: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
                 } else {
                     LogService.shared.log("Invalid speed data")
                 }
-            //nothing
-            case CBUUID(string: "FFF1"): // FFF1 Level
-                if let speedData = characteristic.value {
-                    // Interpret speedData based on your scooter's specification
-                    // For example, if it's a single byte representing speed in km/h:
-                    let speed = speedData.first ?? 0
-                    LogService.shared.log("Current FFF1: ", speed, "km/h")
-                } else {
-                    LogService.shared.log("Invalid FFF1 data")
-                }
             case CBUUID(string: "2A19"): // Battery Level
                 if let batteryLevelData = characteristic.value,
                    let batteryLevel = batteryLevelData.first {
