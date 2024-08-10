@@ -14,6 +14,7 @@ class LogTableViewCell: UITableViewCell {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
 
         contentView.addSubview(logLabel)
+        logLabel.numberOfLines = 0
 
         logLabel.snp.makeConstraints { make in
             make.top.equalToSuperview().offset(10)

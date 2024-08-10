@@ -18,6 +18,8 @@ class ScanNearbyDevicesViewController: UIViewController, UITableViewDataSource, 
 
         scooterConnectionManager.onPeripheralsDiscovered = { [weak self] newPeripherals in
             DispatchQueue.main.async {
+                LogService.shared.log("Discovered new peripheral")
+                LogService.shared.log(newPeripherals.description)
                 self?.discoveredPeripherals = newPeripherals
                 self?.tableView.reloadData()
             }
@@ -45,10 +47,7 @@ class ScanNearbyDevicesViewController: UIViewController, UITableViewDataSource, 
     func observeHeader() {
         header?.didTapGodMode = { [weak self] in
             guard let self else { return }
-            print(" DID TAP GOD MODE IN SCAN NEARBY DEVICES")
-            let logVC = LogViewController(logMessages: LogService.shared.logMessages) // Replace with your actual log data
-            print(" ALL MESSAGES ---", LogService.shared.logMessages)
-            // Set the presentation style and transition
+            let logVC = LogViewController(logMessages: LogService.shared.logMessages)
             logVC.modalPresentationStyle = .custom
             logVC.transitioningDelegate = self
 

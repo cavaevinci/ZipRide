@@ -56,7 +56,6 @@ class Navbar: UIView {
     }
     
     @objc func didTapGodModeButton() {
-        print(" navbar did tap god mode")
         didTapGodMode?()
     }
     

@@ -27,11 +27,13 @@ class LogViewController: UIViewController, UITableViewDataSource, UITableViewDel
         // Set up the table view
         tableView.dataSource = self
         tableView.delegate = self
+        tableView.estimatedRowHeight = 44
+        tableView.rowHeight = UITableView.automaticDimension
         tableView.register(LogTableViewCell.self, forCellReuseIdentifier: "LogCell")
         view.addSubview(tableView)
         
         tableView.snp.makeConstraints { make in
-            make.edges.equalToSuperview() // Make the table view fill the entire view
+            make.edges.equalToSuperview()
         }
     }
     

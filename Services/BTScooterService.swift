@@ -36,6 +36,7 @@ class BTScooterService: NSObject, CBCentralManagerDelegate {
 
     func stopScanning() {
         centralManager.stopScan()
+        LogService.shared.log("Bluetooth - stop scanning")
     }
 
     // MARK: - CBCentralManagerDelegate Methods
