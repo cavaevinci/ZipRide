@@ -21,7 +21,6 @@ class BTScooterService: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
     var onServicesDiscovered: (([CBService]?) -> Void)?
     
     var connectedPeripheralName: String? {
-        print(" CONN PER NAME --", connectedPeripheral)
         return connectedPeripheral?.name
     }
     
@@ -91,9 +90,8 @@ class BTScooterService: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
         LogService.shared.log("  Services:", peripheral.services ?? "No services discovered yet")
         stopScanning()
         
-        LogService.shared.log("ovo je perpheral ", peripheral)
         connectedPeripheral = peripheral
-        LogService.shared.log("ovo je connected perpheral ", connectedPeripheral)
+        LogService.shared.log("connected perpheral ", connectedPeripheral)
         
         // You can now start discovering services on the connected peripheral if needed
         peripheral.discoverServices(nil) // Discover all services
@@ -190,8 +188,26 @@ class BTScooterService: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
         onServicesDiscovered?(services)
 
         for characteristic in characteristics {
-            if characteristic.uuid == CBUUID(string: "2A19") { // Battery Level characteristic UUID
-                peripheral.readValue(for: characteristic)
+            LogService.shared.log("Service characteristic UUID -", characteristic.uuid)
+
+            switch characteristic.uuid {
+                case CBUUID(string: "2A19"): // Battery Level
+                    peripheral.readValue(for: characteristic)
+                case CBUUID(string: "2A29"): // Manufacturer Name String
+                    peripheral.readValue(for: characteristic)
+                case CBUUID(string: "2A24"): // Model Number String
+                    peripheral.readValue(for: characteristic)
+                case CBUUID(string: "2A25"): // Serial Number String
+                    peripheral.readValue(for: characteristic)
+                case CBUUID(string: "2A27"): // Hardware Revision String
+                    peripheral.readValue(for: characteristic)
+                case CBUUID(string: "2A26"): // Firmware Revision String
+                    peripheral.readValue(for: characteristic)
+                case CBUUID(string: "2A28"): // Software Revision String
+                    peripheral.readValue(for: characteristic)
+                // Add more cases for other characteristics you want to read
+                default:
+                    break
             }
         }
     }
@@ -202,15 +218,63 @@ class BTScooterService: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
             LogService.shared.log("Error reading characteristic value: ", error.localizedDescription)
             return
         }
+        LogService.shared.log("characteristic value:  ---", characteristic)
 
-        if characteristic.uuid == CBUUID(string: "2A19") {
-            if let batteryLevelData = characteristic.value,
-               let batteryLevel = batteryLevelData.first {
-                LogService.shared.log("Battery Level: ", batteryLevel, "%")
-            } else {
-                LogService.shared.log("Invalid battery level data")
+        switch characteristic.uuid {
+            case CBUUID(string: "2A19"): // Battery Level
+                if let batteryLevelData = characteristic.value,
+                   let batteryLevel = batteryLevelData.first {
+                    LogService.shared.log("Battery Level: ", batteryLevel, "%")
+                } else {
+                    LogService.shared.log("Invalid battery level data")
+                }
+            case CBUUID(string: "2A29"): // Manufacturer Name String
+                if let manufacturerNameData = characteristic.value,
+                   let manufacturerName = String(data: manufacturerNameData, encoding: .utf8) {
+                    LogService.shared.log("Manufacturer Name: ", manufacturerName)
+                } else {
+                    LogService.shared.log("Invalid manufacturer name data")
+                }
+            case CBUUID(string: "2A24"): // Model Number String
+                if let modelNumberData = characteristic.value,
+                   let modelNumber = String(data: modelNumberData, encoding: .utf8) {
+                    LogService.shared.log("Model Number: ", modelNumber)
+                } else {
+                    LogService.shared.log("Invalid model number data")
+                }
+            case CBUUID(string: "2A25"): // Serial Number String
+                if let serialNumberData = characteristic.value,
+                   let serialNumber = String(data: serialNumberData, encoding: .utf8) {
+                    LogService.shared.log("Serial Number: ", serialNumber)
+                } else {
+                    LogService.shared.log("Invalid serial number data")
+                }
+            case CBUUID(string: "2A27"): // Hardware Revision String
+                if let hardwareRevisionData = characteristic.value,
+                   let hardwareRevision = String(data: hardwareRevisionData, encoding: .utf8) {
+                    LogService.shared.log("Hardware Revision: ", hardwareRevision)
+                } else {
+                    LogService.shared.log("Invalid hardware revision data")
+                }
+            case CBUUID(string: "2A26"): // Firmware Revision String
+                if let firmwareRevisionData = characteristic.value,
+                   let firmwareRevision = String(data: firmwareRevisionData, encoding: .utf8) {
+                    LogService.shared.log("Firmware Revision: ", firmwareRevision)
+                } else {
+                    LogService.shared.log("Invalid firmware revision data")
+                }
+            case CBUUID(string: "2A28"): // Software Revision String
+                if let softwareRevisionData = characteristic.value,
+                   let softwareRevision = String(data: softwareRevisionData, encoding: .utf8) {
+                    LogService.shared.log("Software Revision: ", softwareRevision)
+                } else {
+                    LogService.shared.log("Invalid software revision data")
+                }
+            // Add more cases for other characteristics as needed
+            default:
+                break
             }
-        }
+
     }
 
 }

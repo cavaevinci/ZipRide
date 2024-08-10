@@ -18,10 +18,14 @@ class SystemInfoViewController: UIViewController, UITableViewDataSource, UITable
     var header: Navbar!
 
     var services: [CBService] = []
+    var serviceCharacteristics: [CBService: [CBCharacteristic]] = [:]
 
     init(services: [CBService]) {
         self.services = services
         super.init(nibName: nil, bundle: nil)
+        for service in services {
+            serviceCharacteristics[service] = [] // Initially, no characteristics are discovered
+        }
     }
 
     required init?(coder: NSCoder) {
