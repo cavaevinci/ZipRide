@@ -137,7 +137,6 @@ class BTScooterService: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
             }
         }
 
-        // Notify the view controller to update the UI
         onPeripheralsDiscovered?(discoveredPeripherals)
     }
     
