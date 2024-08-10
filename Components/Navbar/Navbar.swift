@@ -14,6 +14,7 @@ enum NavigationBarStyle {
 
 protocol NavigationBarProtocol: UIView {
     func setBarStyle(_ style: NavigationBarStyle)
+    func setTitle(_ title: String?)
     var didTapGodMode: (() -> Void)? { get set }
 }
 
@@ -92,6 +93,10 @@ extension Navbar: NavigationBarProtocol {
             godModeButton.isHidden = true
             LogService.shared.log("SET NORMALMODE")
         }
+    }
+    
+    func setTitle(_ title: String?) {
+        currentSceneName.text = title
     }
 }
 
