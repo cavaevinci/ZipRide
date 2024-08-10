@@ -13,7 +13,20 @@ class LogService {
 
     private init() { }
 
-    func log(_ message: String) {
+    /*func log(_ message: String) {
+        logMessages.append(message)
+        print(message)
+        logViewController?.updateTableView()
+    }*/
+    func log(_ items: Any...) {
+        let message = items.map { item in
+            if let describableItem = item as? CustomStringConvertible {
+                return describableItem.description
+            } else {
+                return String(describing: item)
+            }
+        }.joined(separator: " ")
+
         logMessages.append(message)
         print(message)
         logViewController?.updateTableView()
