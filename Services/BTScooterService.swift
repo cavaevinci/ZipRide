@@ -56,9 +56,7 @@ class BTScooterService: NSObject, CBCentralManagerDelegate {
 
     func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
         if !discoveredPeripherals.contains(where: { $0.identifier == peripheral.identifier }) && peripheral.name != nil {
-            //LogService.shared.log("Discovered peripheral: \(peripheral.name ?? "Unknown")")
             LogService.shared.log("Discovered peripheral:", peripheral)
-
             discoveredPeripherals.append(peripheral)
             onPeripheralsDiscovered?(discoveredPeripherals)
         }
