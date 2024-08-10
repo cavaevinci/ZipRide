@@ -1,34 +1,27 @@
 //
-//  SystemInfoViewController.swift
+//  ServiceDetailsViewController.swift
 //  ZipRide
 //
-//  Created by Ivan Evačić on 09.08.2024..
+//  Created by Ivan Evačić on 10.08.2024..
 //
 
-
 import UIKit
-import SnapKit
 import CoreBluetooth
 
-class SystemInfoViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
+class ServiceDetailsViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
     
     let scooterConnectionManager = BTScooterService()
 
     let tableView = UITableView()
     var header: Navbar!
 
-    var connectedPeripheral: CBPeripheral?
-    var services: [CBService] = []
-    var serviceCharacteristics: [CBService: [CBCharacteristic]] = [:]
+    var service: CBService!
+    var characteristics: [CBCharacteristic] = []
 
-    init(services: [CBService], connectedPeripheral: CBPeripheral) {
-        self.services = services
-        self.connectedPeripheral = connectedPeripheral // Store the connected peripheral
-        print(" self.connectedPeripheral--- ", self.connectedPeripheral)
+    init(service: CBService, characteristics: [CBCharacteristic]) {
+        self.service = service
+        self.characteristics = characteristics
         super.init(nibName: nil, bundle: nil)
-        for service in services {
-            serviceCharacteristics[service] = [] // Initially, no characteristics are discovered
-        }
     }
 
     required init?(coder: NSCoder) {
@@ -38,16 +31,21 @@ class SystemInfoViewController: UIViewController, UITableViewDataSource, UITable
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        print("ServiceDetailViewController--_service ", service)
+        //print("ServiceDetailViewController--characteristics ", characteristics)
+        
         // Set up table view
         tableView.dataSource = self
         tableView.delegate = self
         tableView.estimatedRowHeight = 44
         tableView.rowHeight = UITableView.automaticDimension
-        tableView.register(ServiceTableViewCell.self, forCellReuseIdentifier: "ServiceCell")
+        tableView.register(ServiceDetailTableViewCell.self, forCellReuseIdentifier: "ServiceDetailCell")
         view.addSubview(tableView)
 
         setupHeader()
         setupConstraints()
+        
+        //connectedPeripheral?.discoverCharacteristics(nil, for: service)
     }
     
     func setupConstraints() {
@@ -66,7 +64,7 @@ class SystemInfoViewController: UIViewController, UITableViewDataSource, UITable
         navigationController?.navigationBar.isHidden = true
         header = Navbar()
         header.setBarStyle(.godMode)
-        header.setTitle(scooterConnectionManager.connectedPeripheralName ?? "Unknown Device")
+        header.setTitle(service.uuid.uuidString)
         view.addSubview(header)
         observeHeader()
     }
@@ -81,29 +79,26 @@ class SystemInfoViewController: UIViewController, UITableViewDataSource, UITable
             present(logVC, animated: true, completion: nil)
         }
     }
-
+    
     // MARK: - UITableViewDataSource
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return services.count
+        return characteristics.count
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "ServiceCell", for: indexPath) as! ServiceTableViewCell
-        cell.configure(with: services[indexPath.row])
+        let cell = tableView.dequeueReusableCell(withIdentifier: "ServiceDetailCell", for: indexPath) as! ServiceDetailTableViewCell
+        cell.configure(with: characteristics[indexPath.row])
         return cell
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
-
-        let selectedService = Array(serviceCharacteristics.keys)[indexPath.section]
-        let serviceDetailsVC = ServiceDetailsViewController(service: selectedService, characteristics: serviceCharacteristics[selectedService] ?? [])
-        navigationController?.pushViewController(serviceDetailsVC, animated: true)
     }
+
 }
 
-extension SystemInfoViewController: UIViewControllerTransitioningDelegate {
+extension ServiceDetailsViewController: UIViewControllerTransitioningDelegate {
     func presentationController(forPresented presented: UIViewController, presenting: UIViewController?, source: UIViewController) -> UIPresentationController? {
         return
  BottomHalfPresentationController(presentedViewController: presented, presenting: presenting)

@@ -90,7 +90,7 @@ class ScanNearbyDevicesViewController: UIViewController, UITableViewDataSource, 
 
            DispatchQueue.main.async {
                if let services = services {
-                   let systemInfoVC = SystemInfoViewController(services: services)
+                   let systemInfoVC = SystemInfoViewController(services: services, connectedPeripheral: selectedPeripheral)
                    self.navigationController?.pushViewController(systemInfoVC, animated: true)
                } else {
                    // Handle the case where service discovery failed (e.g., show an error message)
