@@ -10,7 +10,7 @@ import UIKit
 import SnapKit
 import CoreBluetooth
 
-class SystemInfoViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
+class SystemInfoViewController: UIViewController, UITableViewDataSource, UITableViewDelegate, UINavigationControllerDelegate {
     
     let scooterConnectionManager = BTScooterService()
 
@@ -44,7 +44,7 @@ class SystemInfoViewController: UIViewController, UITableViewDataSource, UITable
         tableView.rowHeight = UITableView.automaticDimension
         tableView.register(ServiceTableViewCell.self, forCellReuseIdentifier: "ServiceCell")
         view.addSubview(tableView)
-
+        navigationController?.delegate = self
         setupHeader()
         setupConstraints()
     }
@@ -61,11 +61,25 @@ class SystemInfoViewController: UIViewController, UITableViewDataSource, UITable
         }
     }
     
+    func navigationController(_ navigationController: UINavigationController, willShow viewController: UIViewController, animated: Bool) {
+        // Hide the custom navbar when navigating away from this view controller
+        if viewController != self {
+            header.isHidden = true
+        }
+    }
+
+    func navigationController(_ navigationController: UINavigationController, didShow viewController: UIViewController, animated: Bool) {
+        // Show the custom navbar when returning to this view controller
+        if viewController == self {
+            header.isHidden = false
+        }
+    }
+    
     func setupHeader() {
         navigationController?.navigationBar.isHidden = true
         header = Navbar()
         header.setBarStyle(.godMode)
-        header.setTitle(scooterConnectionManager.connectedPeripheralName ?? "Unknown Device")
+        header.setTitle("Services")
         view.addSubview(header)
         observeHeader()
     }
