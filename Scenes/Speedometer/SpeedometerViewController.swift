@@ -6,40 +6,39 @@
 //
 
 import UIKit
+import SwiftUI
+import CoreLocation
 
-class SpeedometerViewController: UIViewController {
- 
+class SpeedometerViewController: UIViewController, CLLocationManagerDelegate {
+    
+    @State private var value = 25.0
+    
+    private let locationManager = CLLocationManager()
+
     override func viewDidLoad() {
         super.viewDidLoad()
-
-        let test = GaugeView(frame: CGRect(x: 40, y: 40, width: 256, height: 256))
-        test.backgroundColor = .clear
-        view.addSubview(test)
         
-        test.translatesAutoresizingMaskIntoConstraints = false
-        test.snp.makeConstraints { make in
-            make.centerX.equalToSuperview()
-            make.centerY.equalToSuperview()
-            make.width.height.equalTo(256)
-        }
+        locationManager.delegate = self
+        locationManager.requestAlwaysAuthorization()
+        locationManager.startUpdatingLocation()
+
+        let hostingController = UIHostingController(rootView: GaugeView(coveredRadius: 225, maxValue: 100, steperSplit: 10, value: $value))
+
+        addChild(hostingController)
+        view.addSubview(hostingController.view)
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-            UIView.animate(withDuration: 1) {
-                test.value = 33
-            }
-        }
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-            UIView.animate(withDuration: 1) {
-                test.value = 66
-            }
-        }
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
-            UIView.animate(withDuration: 1) {
-                test.value = 0
-            }
+        hostingController.view.translatesAutoresizingMaskIntoConstraints = false
+        
+        hostingController.view.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
         }
         
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        if let location = locations.last {
+            let speed = location.speed * 3.6 // Convert m/s to km/h
+            value = speed
+        }
     }
 }
