@@ -8,33 +8,9 @@
 import SwiftUI
 
 struct ContentView: View {
-    /*
-    @State private var value = 25.0
-    
-    var body: some View {
-        VStack {
-            GaugeView(coveredRadius: 225, maxValue: 100, steperSplit: 10, value: $value)
-            Slider(value: $value, in: 0...100, step: 1)
-                .padding(.horizontal, 20)
-            HStack {
-                Spacer()
-                Button(action: {
-                    self.value = 0
-                }) {
-                    Text("Zero")
-                }.foregroundColor(.blue)
-                Spacer()
-                Button(action: {
-                    self.value = 100
-                }) {
-                    Text("Max")
-                }.foregroundColor(.blue)
-                Spacer()
-            }
-        }
-    }*/
-    @State private var value = 25.0
 
+    @State var value = 100.0
+   
     var body: some View {
         GaugeView(coveredRadius: 225, maxValue: 100, steperSplit: 10, value: $value)
     }
@@ -51,6 +27,7 @@ struct Needle: Shape {
 }
 
 struct GaugeView: View {
+    
     func colorMix(percent: Int) -> Color {
         let p = Double(percent)
         let tempG = (100.0-p)/100
@@ -92,6 +69,7 @@ struct GaugeView: View {
     }
     
     @Binding var value: Double
+    
     var body: some View {
         ZStack {
             Text("\(value, specifier: "%0.0f")")
@@ -111,6 +89,7 @@ struct GaugeView: View {
                 .offset(x: -70, y: 0)
                 .rotationEffect(.init(degrees: getAngle(value: value)), anchor: .center)
                 .animation(.linear)
+            Text("Value: \(value)") // Add this line to print the value
             Circle()
                 .frame(width: 20, height: 20)
                 .foregroundColor(.red)
@@ -118,7 +97,11 @@ struct GaugeView: View {
     }
     
     func getAngle(value: Double) -> Double {
+        print(" GET ANGLE ----", value)
+        print(" RETURN ---", (value/Double(maxValue))*coveredRadius - coveredRadius/2 + 90 )
         return (value/Double(maxValue))*coveredRadius - coveredRadius/2 + 90
+        //let maxAngle = 270.0 // Adjust max angle as needed
+                //return (value / Double(maxValue)) * maxAngle
     }
 }
 
